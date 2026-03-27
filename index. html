@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI成语绘本</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#fff7e8;padding:20px;max-width:900px;margin:auto;font-family:sans-serif;}
+.title{text-align:center;font-size:26px;margin:20px 0;color:#8c5a33;}
+.input-box{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+#wordInput{flex:1;padding:14px 16px;border:1px solid #ddd;border-radius:12px;font-size:16px;}
+button{padding:14px 20px;background:#ffab5f;color:#fff;border:none;border-radius:12px;font-weight:bold;cursor:pointer;}
+button:disabled{background:#ccc;}
+.page-box{background:white;padding:30px;border-radius:20px;min-height:500px;margin-bottom:20px;}
+.page-img{width:100%;border-radius:16px;margin-bottom:20px;}
+.page-text{font-size:18px;line-height:1.9;white-space:pre-line;}
+.nav{display:flex;gap:14px;justify-content:space-between;margin-bottom:20px;}
+.nav button{flex:1;padding:16px;}
+.tips{text-align:center;color:#999;margin-bottom:20px;}
+.loading{text-align:center;padding:40px;color:#666;}
+</style>
+</head>
+<body>
+
+<h1 class="title">📖 AI 成语绘本生成器</h1>
+<div class="input-box">
+  <input type="text" id="wordInput" placeholder="输入成语，如：狐假虎威">
+    <button onclick="generateBook()">生成绘本</button>
+    </div>
+    <p class="tips">部署后可AI自动生成故事+匹配插画</p>
+
+    <div class="nav">
+      <button id="prev" disabled onclick="prevPage()">上一页</button>
+        <button id="next" disabled onclick="nextPage()">下一页</button>
+        </div>
+
+        <div class="page-box" id="pageBox">请输入成语并生成</div>
+
+        <script>
+        let pages = [];
+        let current = 0;
+
+        // ====== AI 生成故事（部署后才生效）======
+        async function generateStory(word) {
+              const prompt = `你是儿童绘本作者，围绕成语“${word}”写4段简单易懂的儿童故事，每段一句话，不要标题，直接输出4行。`;
+
+                const res = await fetch("https://api.moonshot.cn/v1/chat/completions", {
+                        method: "POST",
+                            headers: { "Content-Type": "application/json", "Authorization": "Bearer none" },
+                                body: JSON.stringify({
+                                          model: "moonshot-v1-8k",
+                                                messages: [{ role: "user", content: prompt }],
+                                                      temperature: 0.7
+                                })
+                });
+
+                  const data = await res.json();
+                    const text = data.choices[0].message.content.trim();
+                      return text.split(/\n+/).filter(l => l.trim()).slice(0, 4);
+        }
+
+        // ====== AI 生成对应插画 ======
+        function makeImageUrl(promptText) {
+              const prompt = encodeURIComponent(
+                    `children's storybook illustration, ${promptText}, watercolor, cute, soft colors, fairy tale, no logo`
+              );
+                return `https://image.pollinations.ai/prompt/${prompt}?width=800&height=600&nologo=true`;
+        }
+
+        // ====== 生成绘本 ======
+        async function generateBook() {
+              const w = document.getElementById('wordInput').value.trim();
+                if (!w) return alert("请输入成语");
+
+                  const box = document.getElementById('pageBox');
+                    box.innerHTML = '<div class="loading">AI正在生成故事…</div>';
+                      setBtn(false);
+
+                        try {
+                                const lines = await generateStory(w);
+                                    pages = [
+                                              { img: makeImageUrl(`story cover ${w}`), text: `《${w}》\n儿童绘本` },
+                                                    { img: makeImageUrl(`${w} story 1`), text: lines[0] },
+                                                          { img: makeImageUrl(`${w} story 2`), text: lines[1] },
+                                                                { img: makeImageUrl(`${w} story 3`), text: lines[2] },
+                                                                      { img: makeImageUrl(`${w} moral`), text: lines[3] }
+                                    ];
+                                        current = 0;
+                                            renderPage();
+                                                setBtn(true);
+                        } catch (e) {
+                                box.innerHTML = "部署后才能AI生成<br>本地打开无法调用接口";
+                                    console.error(e);
+                        }
+        }
+
+        // ====== 翻页 & 朗读 ======
+        function renderPage() {
+              const p = pages[current];
+                document.getElementById('pageBox').innerHTML = `
+                    <img src="${p.img}" class="page-img" onerror="this.src='https://picsum.photos/800/600'">
+                        <div class="page-text">${p.text}</div>`;
+                          speak(p.text);
+        }
+
+        function nextPage() { current++; renderPage(); }
+        function prevPage() { current--; renderPage(); }
+        function setBtn(ok) {
+              document.getElementById('prev').disabled = !ok;
+                document.getElementById('next').disabled = !ok;
+        }
+
+        // 朗读
+        function speak(t) {
+              if (!window.speechSynthesis) return;
+                const u = new SpeechSynthesisUtterance(t);
+                  u.lang = 'zh-CN';
+                    window.speechSynthesis.speak(u);
+        }
+
+        document.getElementById('wordInput').addEventListener('keypress', e => {
+              if (e.key === 'Enter') generateBook();
+        });
+        </script>
+        </body>
+        </html>
+        })
+        }
+        }
+        }
+                        }
+                                    ]
+                        }
+        }
+              )
+        }
+                                })
+                })
+        }
